@@ -89,6 +89,9 @@ public class ClassUtils {
     public static ClassLoader getClassLoader(Class<?> clazz) {
         ClassLoader cl = null;
         try {
+            /**
+             * https://www.cnblogs.com/gaoxing/p/4703412.html
+             */
             cl = Thread.currentThread().getContextClassLoader();
         } catch (Throwable ex) {
             // Cannot access thread context ClassLoader - falling back to system class loader...
@@ -99,6 +102,7 @@ public class ClassUtils {
             if (cl == null) {
                 // getClassLoader() returning null indicates the bootstrap ClassLoader
                 try {
+                    //使用启动类加载器
                     cl = ClassLoader.getSystemClassLoader();
                 } catch (Throwable ex) {
                     // Cannot access system ClassLoader - oh well, maybe the caller can live with null...

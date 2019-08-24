@@ -366,8 +366,9 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
     }
 
     public synchronized void export() {
+        //完成一些前置的配置工作
         checkAndUpdateSubConfigs();
-
+        //根据配置项 决定是否导出
         if (!shouldExport()) {
             return;
         }
@@ -410,6 +411,7 @@ public class ServiceConfig<T> extends AbstractServiceConfig {
         exported = true;
 
         if (StringUtils.isEmpty(path)) {
+
             path = interfaceName;
         }
         doExportUrls();

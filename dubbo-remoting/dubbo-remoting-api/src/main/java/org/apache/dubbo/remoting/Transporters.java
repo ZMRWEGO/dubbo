@@ -74,7 +74,7 @@ public class Transporters {
         }
         return getTransporter().connect(url, handler);
     }
-
+    //通过spi获取的自适应拓展类  默认为NettyTransporter
     public static Transporter getTransporter() {
         return ExtensionLoader.getExtensionLoader(Transporter.class).getAdaptiveExtension();
     }

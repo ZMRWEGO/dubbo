@@ -99,7 +99,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             if (registry != null) {
                 return registry;
             }
-            //create registry by spi/ioc
+            //create registry by spi/ioc             //创建注册中心
             registry = createRegistry(url);
             if (registry == null) {
                 throw new IllegalStateException("Can not create registry " + url);
@@ -111,7 +111,7 @@ public abstract class AbstractRegistryFactory implements RegistryFactory {
             LOCK.unlock();
         }
     }
-
+    //该方法是一个模板方法 有具体的子类来实现
     protected abstract Registry createRegistry(URL url);
 
 }

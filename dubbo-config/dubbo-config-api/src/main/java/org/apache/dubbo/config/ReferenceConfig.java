@@ -241,11 +241,13 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
     }
 
     public synchronized T get() {
+        //常规配置检查
         checkAndUpdateSubConfigs();
 
         if (destroyed) {
             throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
         }
+        //ref这里为接口代理实现类
         if (ref == null) {
             init();
         }
@@ -317,7 +319,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                 attributes.put(methodConfig.getName(), convertMethodConfig2AsyncInfo(methodConfig));
             }
         }
-
+        //获取服务消费者ip
         String hostToRegistry = ConfigUtils.getSystemProperty(DUBBO_IP_TO_REGISTRY);
         if (StringUtils.isEmpty(hostToRegistry)) {
             hostToRegistry = NetUtils.getLocalHost();
@@ -325,7 +327,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
         }
         map.put(REGISTER_IP_KEY, hostToRegistry);
-
+        //创建代理对象
         ref = createProxy(map);
 
         String serviceKey = URL.buildKey(interfaceName, group, version);
@@ -349,14 +351,18 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
 
     @SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
     private T createProxy(Map<String, String> map) {
+        //本地引用
         if (shouldJvmRefer(map)) {
             URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
             invoker = REF_PROTOCOL.refer(interfaceClass, url);
             if (logger.isInfoEnabled()) {
                 logger.info("Using injvm service " + interfaceClass.getName());
             }
-        } else {
+        }
+        //远程引用
+        else {
             urls.clear(); // reference retry init will add url to urls, lead to OOM
+            //用户可能想使用点对点调用
             if (url != null && url.length() > 0) { // user specified URL, could be peer-to-peer address, or register center's address.
                 String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
                 if (us != null && us.length > 0) {
@@ -365,6 +371,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         if (StringUtils.isEmpty(url.getPath())) {
                             url = url.setPath(interfaceName);
                         }
+                        //检测url协议是否为registry 若是则表明用户想使用注册中心
                         if (REGISTRY_PROTOCOL.equals(url.getProtocol())) {
                             urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         } else {
@@ -372,6 +379,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                         }
                     }
                 }
+                //若url为空，则从注册中心获取
             } else { // assemble URL from register center's configuration
                 // if protocols not injvm checkRegistry
                 if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())){
@@ -383,6 +391,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                             if (monitorUrl != null) {
                                 map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
                             }
+                            //向url中添加refer的参数
                             urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
                         }
                     }
@@ -393,6 +402,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
             }
 
             if (urls.size() == 1) {
+                //获取invoker实例
                 invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
             } else {
                 List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
@@ -409,6 +419,7 @@ public class ReferenceConfig<T> extends AbstractReferenceConfig {
                     // The invoker wrap relation would be: RegistryAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, will execute route) -> Invoker
                     invoker = CLUSTER.join(new StaticDirectory(u, invokers));
                 } else { // not a registry url, must be direct invoke.
+                    //使用cluster对多个invoker进行合并
                     invoker = CLUSTER.join(new StaticDirectory(invokers));
                 }
             }

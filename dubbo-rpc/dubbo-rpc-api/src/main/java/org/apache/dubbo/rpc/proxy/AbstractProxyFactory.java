@@ -40,6 +40,7 @@ public abstract class AbstractProxyFactory implements ProxyFactory {
     @Override
     public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
         Class<?>[] interfaces = null;
+        //获取接口
         String config = invoker.getUrl().getParameter(INTERFACES);
         if (config != null && config.length() > 0) {
             String[] types = COMMA_SPLIT_PATTERN.split(config);

@@ -133,6 +133,8 @@ public abstract class Proxy {
 
         long id = PROXY_CLASS_COUNTER.getAndIncrement();
         String pkg = null;
+        //ccp 用于为服务接口生成代理类
+        //ccm 则是用于为 org.apache.dubbo.common.bytecode.Proxy 抽象类生成子类
         ClassGenerator ccp = null, ccm = null;
         try {
             ccp = ClassGenerator.newInstance(cl);
@@ -201,6 +203,10 @@ public abstract class Proxy {
             ccm.setClassName(fcn);
             ccm.addDefaultConstructor();
             ccm.setSuperClass(Proxy.class);
+            // 为 Proxy 的抽象方法 newInstance 生成实现代码，形如：
+            // public Object newInstance(java.lang.reflect.InvocationHandler h) {
+            //     return new org.apache.dubbo.proxy0($1);
+            // }
             ccm.addMethod("public Object newInstance(" + InvocationHandler.class.getName() + " h){ return new " + pcn + "($1); }");
             Class<?> pc = ccm.toClass();
             proxy = (Proxy) pc.newInstance();

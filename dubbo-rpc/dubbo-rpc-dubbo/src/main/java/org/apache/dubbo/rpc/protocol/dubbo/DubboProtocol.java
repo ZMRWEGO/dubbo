@@ -455,13 +455,15 @@ public class DubboProtocol extends AbstractProtocol {
      */
     private List<ReferenceCountExchangeClient> getSharedClient(URL url, int connectNum) {
         String key = url.getAddress();
+        //带有引用技术功能的client
         List<ReferenceCountExchangeClient> clients = referenceClientMap.get(key);
 
         if (checkClientCanUse(clients)) {
+            //增加引用计数
             batchClientRefIncr(clients);
             return clients;
         }
-
+        //若缓存中不存在，则新建clients
         locks.putIfAbsent(key, new Object());
         synchronized (locks.get(key)) {
             clients = referenceClientMap.get(key);
